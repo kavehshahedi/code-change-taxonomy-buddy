@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { LogOut, ChevronLeft, ChevronRight, Edit, Check } from 'lucide-react';
 import Prism from 'prismjs';
@@ -65,42 +65,6 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
     "Other"
   ];
 
-  const fetchNextOrLatestReview = async () => {
-    try {
-      const response = await axios.get(`/reviews/next-or-latest/${userId}`);
-      if (response.data.success) {
-        if (response.data.type === 'new') {
-          setCurrentReview({
-            codePair: response.data.codePair,
-            category: null,
-          });
-          setSelectedCategory(null);
-          setIsReviewingOld(false);
-          setAllReviewsCompleted(false);
-        } else if (response.data.type === 'completed') {
-          setCurrentReview(null);
-          setIsReviewingOld(false);
-          setAllReviewsCompleted(true);
-        }
-        setCurrentReviewIndex(-1);
-      }
-    } catch (error) {
-      console.error('Error fetching review:', error);
-      setCurrentReview(null);
-    }
-  };
-
-  const fetchAllReviews = async () => {
-    try {
-      const response = await axios.get(`/reviews/user/${userId}`);
-      if (response.data.success) {
-        setAllReviews(response.data.reviews);
-      }
-    } catch (error) {
-      console.error('Error fetching all reviews:', error);
-    }
-  };
-
   const fetchSpecificReview = async (reviewId) => {
     try {
       const response = await axios.get(`/reviews/review/${userId}/${reviewId}`);
@@ -160,7 +124,43 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
     }
   };
 
-  const fetchProgress = async () => {
+  const fetchNextOrLatestReview = useCallback(async () => {
+    try {
+      const response = await axios.get(`/reviews/next-or-latest/${userId}`);
+      if (response.data.success) {
+        if (response.data.type === 'new') {
+          setCurrentReview({
+            codePair: response.data.codePair,
+            category: null,
+          });
+          setSelectedCategory(null);
+          setIsReviewingOld(false);
+          setAllReviewsCompleted(false);
+        } else if (response.data.type === 'completed') {
+          setCurrentReview(null);
+          setIsReviewingOld(false);
+          setAllReviewsCompleted(true);
+        }
+        setCurrentReviewIndex(-1);
+      }
+    } catch (error) {
+      console.error('Error fetching review:', error);
+      setCurrentReview(null);
+    }
+  }, [userId]);
+
+  const fetchAllReviews = useCallback(async () => {
+    try {
+      const response = await axios.get(`/reviews/user/${userId}`);
+      if (response.data.success) {
+        setAllReviews(response.data.reviews);
+      }
+    } catch (error) {
+      console.error('Error fetching all reviews:', error);
+    }
+  }, [userId]);
+
+  const fetchProgress = useCallback(async () => {
     try {
       const response = await axios.get(`/reviews/progress/${userId}`);
       if (response.data.success) {
@@ -169,13 +169,13 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
     } catch (error) {
       console.error('Error fetching progress:', error);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchNextOrLatestReview();
     fetchAllReviews();
     fetchProgress();
-  }, [userId]);
+  }, [fetchNextOrLatestReview, fetchAllReviews, fetchProgress]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
