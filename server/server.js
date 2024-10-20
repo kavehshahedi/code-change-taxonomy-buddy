@@ -21,17 +21,17 @@ connectDB();
 // Routes
 app.use('/api', routes);
 
-// // Serve static files in production
-// if (process.env.NODE_ENV === 'production') {
-//   app.use(express.static(path.join(__dirname, '../client/build')));
-//   app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../client/build/index.html'));
-//   });
-// } else {
-//   app.get('*', (req, res) => {
-//     res.send('Running in development mode');
-//   });
-// }
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
+} else {
+  app.get('*', (req, res) => {
+    res.send('Running in development mode');
+  });
+}
 
 // Error handling middleware
 app.use(errorHandler);
