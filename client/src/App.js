@@ -3,7 +3,7 @@ import LoginPage from './LoginPage';
 import CodeChangeTaxonomyBuddy from './CodeChangeTaxonomyBuddy';
 import axios from 'axios';
 
-axios.defaults.baseURL = '/api';
+axios.defaults.baseURL =`${process.env.REACT_APP_SERVER_BASE_URL}/api`;
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
