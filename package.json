@@ -2,10 +2,10 @@
     "name": "cctb-full-stack",
     "version": "1.0.0",
     "scripts": {
-        "start": "node server/server.js",
+        "start": "cd server && node server.js",
         "build": "cd client && npm install && npm run build",
         "dev": "concurrently \"npm run server\" \"npm run client\"",
-        "server": "nodemon server/server.js",
+        "server": "cd server && nodemon server.js",
         "client": "cd client && npm start",
         "heroku-postbuild": "cd client && npm install && npm run build"
     },
