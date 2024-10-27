@@ -10,8 +10,12 @@ const User = mongoose.model('User', userSchema);
 
 // Code Pair model
 const codePairSchema = new mongoose.Schema({
+  hash: String,
   version1: String,
   version2: String,
+  projectName: String,
+  commitHash: String,
+  commitMessage: String,
 });
 
 const CodePair = mongoose.model('CodePair', codePairSchema);

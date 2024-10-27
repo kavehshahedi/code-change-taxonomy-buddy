@@ -13,6 +13,7 @@ exports.getNextCodePair = async (req, res, next) => {
           id: nextCodePair._id,
           version1: nextCodePair.version1,
           version2: nextCodePair.version2,
+          commitMessage: nextCodePair.commitMessage,
         },
       });
     } else {
@@ -82,6 +83,7 @@ exports.getReview = async (req, res, next) => {
             id: review.codePairId._id,
             version1: review.codePairId.version1,
             version2: review.codePairId.version2,
+            commitMessage: review.codePairId.commitMessage,
           },
         },
       });
@@ -135,6 +137,7 @@ exports.getNextOrLatestReview = async (req, res, next) => {
                 id: nextCodePair._id,
                 version1: nextCodePair.version1,
                 version2: nextCodePair.version2,
+                commitMessage: nextCodePair.commitMessage,
             },
         });
     } else {
