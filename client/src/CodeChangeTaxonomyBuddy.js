@@ -179,7 +179,8 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
       <div className="px-4 py-2 border-b border-gray-700">
-        <h3 className="text-lg font-medium text-gray-200">{title}</h3>
+        <h3 className="text-lg font-bold font-large text-gray-200 pb-2">Message</h3>
+        <h3 className="font-medium text-gray-200 whitespace-pre-line">{title}</h3>
       </div>
       <div className="overflow-auto">
         {generateDiff()}
@@ -365,7 +366,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
             <>
               <div className="mb-6">
                 <UnifiedDiffViewer
-                  title="Code Changes"
+                  title={currentReview.codePair.commitMessage.trim()}
                   oldCode={currentReview.codePair.version1}
                   newCode={currentReview.codePair.version2}
                 />
