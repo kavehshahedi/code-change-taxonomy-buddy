@@ -270,6 +270,11 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
       fetchAllReviews();
       fetchProgress();
       setCustomCategory('');
+
+      const container = document.querySelector('.flex-1.p-8.overflow-auto');
+      if (container) {
+        container.scrollTo({ top: 0});
+      }
     } catch (error) {
       console.error('Error submitting review:', error);
     }
