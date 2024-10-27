@@ -30,13 +30,16 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
     highlightCode();
   }, [oldCode, newCode]);
 
-  const generateDiff = () => {
-    const diff = diffLines(oldCode, newCode);
-    let oldLineNumber = 1;
-    let newLineNumber = 1;
+  const getUniqueKey = (index, lineNumber, type) => `${type}-${index}-${lineNumber}`;
 
-    const renderLine = (line, lineType, oldLine, newLine, bgColor = '') => (
-      <div className={`flex text-[13px] m-0 ${bgColor}`}>
+  const renderLine = (line, lineType, oldLine, newLine, bgColor = '', index) => {
+    const uniqueKey = getUniqueKey(index, oldLine || newLine, lineType === '+' ? 'added' : lineType === '-' ? 'removed' : 'unchanged');
+    
+    return (
+      <div 
+        key={uniqueKey}
+        className={`flex text-[13px] m-0 ${bgColor}`}
+      >
         <div className={`text-white w-8 ${bgColor.replace('30', '40')} flex flex-shrink-0 items-center justify-center select-none m-0 py-[1px] border-gray-600`}>
           {oldLine}
         </div>
@@ -50,7 +53,13 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
         </pre>
       </div>
     );
+  };
 
+  const generateDiff = () => {
+    const diff = diffLines(oldCode, newCode);
+    let oldLineNumber = 1;
+    let newLineNumber = 1;
+    
     const processedDiff = [];
     
     diff.forEach((change, changeIndex) => {
@@ -130,7 +139,10 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
         {processedDiff.map((item, index) => {
           if (item.type === 'collapse') {
             return (
-              <div key={`collapse-${index}`} className="flex text-[13px] m-0 bg-gray-700/20">
+              <div 
+                key={`collapse-${item.oldLineStart}-${item.newLineStart}`} 
+                className="flex text-[13px] m-0 bg-gray-700/20"
+              >
                 <div className="text-white w-8 flex flex-shrink-0 items-center justify-center select-none m-0 py-[1px] border-gray-600">
                   ⋮
                 </div>
@@ -158,7 +170,7 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
             linePrefix = '-';
           }
 
-          return renderLine(item.line, linePrefix, item.oldLine, item.newLine, bgColor);
+          return renderLine(item.line, linePrefix, item.oldLine, item.newLine, bgColor, index);
         })}
       </div>
     );
