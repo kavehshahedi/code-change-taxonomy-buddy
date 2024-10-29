@@ -8,6 +8,7 @@ const InputField = ({ type, placeholder, value, onChange, onKeyPress }) => (
     value={value}
     onChange={onChange}
     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-blue-500"
+    onKeyUp={onKeyPress}
   />
 );
 
