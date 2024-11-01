@@ -26,6 +26,7 @@ const codeReviewSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   codePairId: { type: mongoose.Schema.Types.ObjectId, ref: 'CodePair' },
   category: String,
+  isFunctionalityChange: Boolean,
 });
 
 const CodeReview = mongoose.model('CodeReview', codeReviewSchema);

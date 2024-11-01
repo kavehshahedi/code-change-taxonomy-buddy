@@ -26,8 +26,8 @@ exports.getNextCodePair = async (req, res, next) => {
 
 exports.submitReview = async (req, res, next) => {
   try {
-    const { userId, codePairId, category } = req.body;
-    const newReview = new CodeReview({ userId, codePairId, category });
+    const { userId, codePairId, category, isFunctionalityChange} = req.body;
+    const newReview = new CodeReview({ userId, codePairId, category, isFunctionalityChange});
     await newReview.save();
     res.json({ success: true, message: 'Review submitted successfully' });
   } catch (error) {
@@ -84,6 +84,7 @@ exports.getReview = async (req, res, next) => {
             version1: review.codePairId.version1,
             version2: review.codePairId.version2,
             commitMessage: review.codePairId.commitMessage,
+            isFunctionalityChange: review.isFunctionalityChange,
           },
         },
       });
@@ -98,10 +99,10 @@ exports.getReview = async (req, res, next) => {
 exports.updateReview = async (req, res, next) => {
   try {
     const { reviewId } = req.params;
-    const { category } = req.body;
+    const { category, isFunctionalityChange } = req.body;
     const updatedReview = await CodeReview.findByIdAndUpdate(
       reviewId,
-      { category },
+      { category, isFunctionalityChange},
       { new: true }
     );
     if (updatedReview) {
@@ -110,6 +111,7 @@ exports.updateReview = async (req, res, next) => {
         review: {
           id: updatedReview._id,
           category: updatedReview.category,
+          isFunctionalityChange: updatedReview.isFunctionalityChange,
         },
         message: 'Review updated successfully',
       });
