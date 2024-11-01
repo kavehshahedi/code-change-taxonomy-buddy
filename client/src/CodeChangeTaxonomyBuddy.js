@@ -4,7 +4,7 @@ import { LogOut, ChevronLeft, ChevronRight, Edit, Check } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-java';
 import 'prismjs/themes/prism-tomorrow.css';
-import {diffLines} from 'unidiff';
+import { diffLines } from 'unidiff';
 
 const DashboardCard = ({ title, value, subValue, color }) => (
   <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
@@ -26,7 +26,7 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
         Prism.highlightAll();
       }
     };
-    
+
     highlightCode();
   }, [oldCode, newCode]);
 
@@ -34,9 +34,9 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
 
   const renderLine = (line, lineType, oldLine, newLine, bgColor = '', index) => {
     const uniqueKey = getUniqueKey(index, oldLine || newLine, lineType === '+' ? 'added' : lineType === '-' ? 'removed' : 'unchanged');
-    
+
     return (
-      <div 
+      <div
         key={uniqueKey}
         className={`flex text-[13px] m-0 ${bgColor}`}
       >
@@ -47,9 +47,9 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
           {newLine}
         </div>
         <pre className="m-0 px-0 py-[1px] flex-1 overflow-x-auto leading-0"
-             style={{background: 'transparent', margin: 3, padding: '0px', fontWeight: 'bolder'}}>
+          style={{ background: 'transparent', margin: 3, padding: '0px', fontWeight: 'bolder' }}>
           <span className="text-white m-0 mr-2 select-none px-2 font-bold">{lineType}</span>
-          <code className="language-java font-bold m-0" style={{filter: 'brightness(1.1)'}}>{line}</code>
+          <code className="language-java font-bold m-0" style={{ filter: 'brightness(1.1)' }}>{line}</code>
         </pre>
       </div>
     );
@@ -59,9 +59,9 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
     const diff = diffLines(oldCode, newCode);
     let oldLineNumber = 1;
     let newLineNumber = 1;
-    
+
     const processedDiff = [];
-    
+
     diff.forEach((change, changeIndex) => {
       const lines = change.value.split('\n');
       if (lines[lines.length - 1] === '') lines.pop();
@@ -139,8 +139,8 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
         {processedDiff.map((item, index) => {
           if (item.type === 'collapse') {
             return (
-              <div 
-                key={`collapse-${item.oldLineStart}-${item.newLineStart}`} 
+              <div
+                key={`collapse-${item.oldLineStart}-${item.newLineStart}`}
                 className="flex text-[13px] m-0 bg-gray-700/20"
               >
                 <div className="text-white w-8 flex flex-shrink-0 items-center justify-center select-none m-0 py-[1px] border-gray-600">
@@ -150,7 +150,7 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
                   ⋮
                 </div>
                 <pre className="m-0 px-0 py-[1px] flex-1 overflow-x-auto leading-0"
-                     style={{background: 'transparent', margin: 3, padding: '0px'}}>
+                  style={{ background: 'transparent', margin: 3, padding: '0px' }}>
                   <span className="text-gray-400 m-0 mr-2 select-none px-2 italic">
                     {`... ${item.skippedLines} unchanged lines ...`}
                   </span>
@@ -161,7 +161,7 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
 
           let bgColor = '';
           let linePrefix = ' ';
-          
+
           if (item.type === 'added') {
             bgColor = 'bg-green-600/30';
             linePrefix = '+';
@@ -194,8 +194,8 @@ const CategoryButton = ({ category, isSelected, onClick, disabled }) => (
     onClick={onClick}
     disabled={disabled}
     className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${isSelected
-        ? 'bg-blue-500 text-white'
-        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+      ? 'bg-blue-500 text-white'
+      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} w-full`}
   >
     {category}
@@ -212,6 +212,8 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
   const [allReviewsCompleted, setAllReviewsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
+  const [isFunctionalityChange, setIsFunctionalityChange] = useState(false);
+
   const categories = [
     "Algorithmic Change",
     "Control Flow/Loop Changes",
@@ -230,6 +232,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
       if (response.data.success) {
         setCurrentReview(response.data.review);
         setSelectedCategory(response.data.review.category);
+        setIsFunctionalityChange(response.data.review.isFunctionalityChange || false);
         setIsReviewingOld(true);
         setIsEditing(false);
       }
@@ -257,6 +260,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
       if (isReviewingOld) {
         await axios.put(`/reviews/${currentReview.id}`, {
           category: categoryToSubmit,
+          isFunctionalityChange
         });
         setIsEditing(false);
       } else {
@@ -264,16 +268,18 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
           userId,
           codePairId: currentReview.codePair.id,
           category: categoryToSubmit,
+          isFunctionalityChange
         });
       }
       fetchNextOrLatestReview();
       fetchAllReviews();
       fetchProgress();
       setCustomCategory('');
+      setIsFunctionalityChange(false);
 
       const container = document.querySelector('.flex-1.p-8.overflow-auto');
       if (container) {
-        container.scrollTo({ top: 0});
+        container.scrollTo({ top: 0 });
       }
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -379,17 +385,36 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
 
               <div className="bg-gray-800 p-6 rounded-lg mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-200">
-                    {isReviewingOld && !isEditing ? "Selected Category" : "Select Category"}
-                  </h3>
-                  {isReviewingOld && (
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="text-blue-400 hover:text-blue-300 focus:outline-none"
-                    >
-                      {isEditing ? <Check size={20} /> : <Edit size={20} />}
-                    </button>
-                  )}
+                  <div className="flex items-center justify-between flex-1">
+                    <h3 className="text-lg font-medium text-gray-200">
+                      {isReviewingOld && !isEditing ? "Selected Category" : "Select Category"}
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      <label className="inline-flex items-center">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={isFunctionalityChange}
+                            onChange={(e) => setIsFunctionalityChange(e.target.checked)}
+                            disabled={isReviewingOld && !isEditing}
+                            className="peer h-4 w-4 appearance-none rounded border border-gray-600 checked:bg-blue-500 checked:border-blue-500 hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center text-white peer-checked:opacity-100 opacity-0 pointer-events-none">
+                            <Check size={14} />
+                          </div>
+                        </div>
+                        <span className="ml-2 text-gray-200">Functionality Change?</span>
+                      </label>
+                      {isReviewingOld && (
+                        <button
+                          onClick={() => setIsEditing(!isEditing)}
+                          className="text-blue-400 hover:text-blue-300 focus:outline-none"
+                        >
+                          {isEditing ? <Check size={20} /> : <Edit size={20} />}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {categories.map((category) => (
@@ -429,8 +454,8 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
                     onClick={submitReview}
                     disabled={!selectedCategory || (selectedCategory === "Other" && !customCategory.trim())}
                     className={`px-6 py-2 rounded-full text-white font-medium ${selectedCategory && (selectedCategory !== "Other" || customCategory.trim())
-                        ? 'bg-blue-500 hover:bg-blue-600'
-                        : 'bg-gray-600 cursor-not-allowed'
+                      ? 'bg-blue-500 hover:bg-blue-600'
+                      : 'bg-gray-600 cursor-not-allowed'
                       }`}
                   >
                     {isEditing ? 'Update Review' : 'Submit Review'}
