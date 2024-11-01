@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { LogOut, ChevronLeft, ChevronRight, Edit, Check } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Edit, Check, X } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-java';
 import 'prismjs/themes/prism-tomorrow.css';
@@ -189,22 +189,35 @@ const UnifiedDiffViewer = ({ title, oldCode, newCode }) => {
   );
 };
 
-const CategoryButton = ({ category, isSelected, onClick, disabled }) => (
+const CategoryButton = ({ category, isSelected, onClick, disabled, onRemove, showRemove }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${isSelected
-      ? 'bg-blue-500 text-white'
-      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} w-full`}
+    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 relative group ${
+      isSelected
+        ? 'bg-blue-500 text-white'
+        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+    } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} w-full`}
   >
-    {category}
+    <span>{category}</span>
+    {showRemove && (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X size={14} />
+      </button>
+    )}
   </button>
 );
 
 const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
   const [currentReview, setCurrentReview] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [customCategories, setCustomCategories] = useState([]);
   const [progress, setProgress] = useState({ total: 0, completed: 0, remaining: 0 });
   const [allReviews, setAllReviews] = useState([]);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(-1);
@@ -222,8 +235,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
     "Exception & Input/Output Handling",
     "Concurrency/Parallelism",
     "API/Library Call Changes",
-    "Security Fix",
-    "Other"
+    "Security Fix"
   ];
 
   const fetchSpecificReview = async (reviewId) => {
@@ -231,7 +243,6 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
       const response = await axios.get(`/reviews/review/${userId}/${reviewId}`);
       if (response.data.success) {
         setCurrentReview(response.data.review);
-        setSelectedCategory(response.data.review.category);
         setIsFunctionalityChange(response.data.review.isFunctionalityChange || false);
         setIsReviewingOld(true);
         setIsEditing(false);
@@ -242,24 +253,32 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
   };
 
   const handleCategorySelect = (category) => {
+    if (isReviewingOld && !isEditing) return;
+
     if (category === "Other") {
-      setSelectedCategory("Other");
+      if (!customCategories.includes(customCategory) && customCategory.trim()) {
+        setCustomCategories([...customCategories, customCategory.trim()]);
+        setSelectedCategories([...selectedCategories, customCategory.trim()]);
+        setCustomCategory('');
+      }
     } else {
-      setSelectedCategory(category);
-      setCustomCategory('');
+      if (!selectedCategories.includes(category)) {
+        setSelectedCategories([...selectedCategories, category]);
+      }
     }
   };
 
-  const submitReview = async () => {
-    if (!currentReview || (!selectedCategory && selectedCategory !== "Other")) return;
+  const removeCategory = (indexToRemove) => {
+    setSelectedCategories(selectedCategories.filter((_, index) => index !== indexToRemove));
+  };
 
-    const categoryToSubmit = selectedCategory === "Other" ? customCategory : selectedCategory;
-    if (selectedCategory === "Other" && !customCategory.trim()) return;
+  const submitReview = async () => {
+    if (!currentReview || selectedCategories.length === 0) return;
 
     try {
       if (isReviewingOld) {
         await axios.put(`/reviews/${currentReview.id}`, {
-          category: categoryToSubmit,
+          categories: selectedCategories,
           isFunctionalityChange
         });
         setIsEditing(false);
@@ -267,7 +286,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
         await axios.post(`/reviews/submit`, {
           userId,
           codePairId: currentReview.codePair.id,
-          category: categoryToSubmit,
+          categories: selectedCategories,
           isFunctionalityChange
         });
       }
@@ -275,6 +294,8 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
       fetchAllReviews();
       fetchProgress();
       setCustomCategory('');
+      setCustomCategories([]);
+      setSelectedCategories([]);
       setIsFunctionalityChange(false);
 
       const container = document.querySelector('.flex-1.p-8.overflow-auto');
@@ -303,7 +324,6 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
             codePair: response.data.codePair,
             category: null,
           });
-          setSelectedCategory(null);
           setIsReviewingOld(false);
           setAllReviewsCompleted(false);
         } else if (response.data.type === 'completed') {
@@ -364,7 +384,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
           </div>
         </div>
       </div>
-
+  
       <div className="flex-1 p-8 overflow-auto">
         <div className="container mx-auto">
           <div className="grid grid-cols-3 gap-6 mb-6">
@@ -372,7 +392,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
             <DashboardCard title="Completed" value={progress.completed} subValue="reviews" color="text-green-400" />
             <DashboardCard title="Remaining" value={progress.remaining} subValue="reviews" color="text-yellow-400" />
           </div>
-
+  
           {currentReview ? (
             <>
               <div className="mb-6">
@@ -382,12 +402,12 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
                   newCode={currentReview.codePair.version2}
                 />
               </div>
-
+  
               <div className="bg-gray-800 p-6 rounded-lg mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center justify-between flex-1">
                     <h3 className="text-lg font-medium text-gray-200">
-                      {isReviewingOld && !isEditing ? "Selected Category" : "Select Category"}
+                      {isReviewingOld && !isEditing ? "Selected Categories" : "Select Categories"}
                     </h3>
                     <div className="flex items-center gap-4">
                       <label className="inline-flex items-center">
@@ -416,31 +436,61 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
                     </div>
                   </div>
                 </div>
+  
+                {selectedCategories.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm text-gray-400 mb-2">Selected Categories (in order):</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCategories.map((category, index) => (
+                        <div key={index} className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                          <span>{index + 1}. {category}</span>
+                          {(!isReviewingOld || isEditing) && (
+                            <button
+                              onClick={() => removeCategory(index)}
+                              className="hover:text-white focus:outline-none"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+  
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {categories.map((category) => (
                     <CategoryButton
                       key={category}
                       category={category}
-                      isSelected={selectedCategory === category}
-                      onClick={() => (isEditing || !isReviewingOld) && handleCategorySelect(category)}
+                      isSelected={selectedCategories.includes(category)}
+                      onClick={() => handleCategorySelect(category)}
                       disabled={isReviewingOld && !isEditing}
+                      showRemove={selectedCategories.includes(category)}
+                      onRemove={() => removeCategory(selectedCategories.indexOf(category))}
                     />
                   ))}
                 </div>
-                {selectedCategory === "Other" && (
-                  <div className="mt-4">
-                    <input
-                      type="text"
-                      value={customCategory}
-                      onChange={(e) => setCustomCategory(e.target.value)}
-                      placeholder="Enter custom category"
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                      disabled={isReviewingOld && !isEditing}
-                    />
-                  </div>
-                )}
+  
+                <div className="mt-4 flex gap-2">
+                  <input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Enter custom category"
+                    className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    disabled={isReviewingOld && !isEditing}
+                  />
+                  <button
+                    onClick={() => handleCategorySelect("Other")}
+                    disabled={!customCategory.trim() || (isReviewingOld && !isEditing)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add Custom
+                  </button>
+                </div>
               </div>
-
+  
               <div className="flex justify-between items-center mb-6">
                 <button
                   onClick={() => navigateReview(-1)}
@@ -452,11 +502,12 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
                 {(!isReviewingOld || isEditing) && (
                   <button
                     onClick={submitReview}
-                    disabled={!selectedCategory || (selectedCategory === "Other" && !customCategory.trim())}
-                    className={`px-6 py-2 rounded-full text-white font-medium ${selectedCategory && (selectedCategory !== "Other" || customCategory.trim())
-                      ? 'bg-blue-500 hover:bg-blue-600'
-                      : 'bg-gray-600 cursor-not-allowed'
-                      }`}
+                    disabled={selectedCategories.length === 0}
+                    className={`px-6 py-2 rounded-full text-white font-medium ${
+                      selectedCategories.length > 0
+                        ? 'bg-blue-500 hover:bg-blue-600'
+                        : 'bg-gray-600 cursor-not-allowed'
+                    }`}
                   >
                     {isEditing ? 'Update Review' : 'Submit Review'}
                   </button>
@@ -475,7 +526,7 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
               {allReviewsCompleted ? "All code pairs have been reviewed." : "No code pairs available for review."}
             </div>
           )}
-
+  
           {(isReviewingOld || allReviewsCompleted) && (
             <div className="mt-8">
               <h3 className="text-xl font-medium text-gray-200 mb-4">All Reviews</h3>
@@ -487,11 +538,16 @@ const CodeChangeTaxonomyBuddy = ({ username, userId, onLogout }) => {
                       setCurrentReviewIndex(index);
                       fetchSpecificReview(review.id);
                     }}
-                    className={`p-4 rounded-lg ${currentReviewIndex === index ? 'bg-blue-500' : 'bg-gray-700'
-                      } hover:bg-blue-600 transition-colors text-left`}
+                    className={`p-4 rounded-lg ${
+                      currentReviewIndex === index ? 'bg-blue-500' : 'bg-gray-700'
+                    } hover:bg-blue-600 transition-colors text-left`}
                   >
                     <div className="font-medium">Review {index + 1}</div>
-                    <div className="text-sm text-gray-300 truncate">{review.category}</div>
+                    <div className="text-sm text-gray-300 truncate">
+                      {Array.isArray(review.categories) 
+                        ? review.categories.join(', ')
+                        : review.categories}
+                    </div>
                   </button>
                 ))}
               </div>
