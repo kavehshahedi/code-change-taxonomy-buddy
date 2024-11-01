@@ -16,6 +16,7 @@ const codePairSchema = new mongoose.Schema({
   projectName: String,
   commitHash: String,
   commitMessage: String,
+  performanceChange: String,
 });
 
 const CodePair = mongoose.model('CodePair', codePairSchema);
