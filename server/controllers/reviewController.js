@@ -26,8 +26,8 @@ exports.getNextCodePair = async (req, res, next) => {
 
 exports.submitReview = async (req, res, next) => {
   try {
-    const { userId, codePairId, category, isFunctionalityChange} = req.body;
-    const newReview = new CodeReview({ userId, codePairId, category, isFunctionalityChange});
+    const { userId, codePairId, categories, isFunctionalityChange} = req.body;
+    const newReview = new CodeReview({ userId, codePairId, categories, isFunctionalityChange});
     await newReview.save();
     res.json({ success: true, message: 'Review submitted successfully' });
   } catch (error) {
@@ -61,7 +61,7 @@ exports.getUserReviews = async (req, res, next) => {
       success: true,
       reviews: reviews.map(review => ({
         id: review._id,
-        category: review.category,
+        categories: review.categories,
       })),
     });
   } catch (error) {
@@ -78,7 +78,7 @@ exports.getReview = async (req, res, next) => {
         success: true,
         review: {
           id: review._id,
-          category: review.category,
+          categories: review.categories,
           codePair: {
             id: review.codePairId._id,
             version1: review.codePairId.version1,
@@ -99,10 +99,10 @@ exports.getReview = async (req, res, next) => {
 exports.updateReview = async (req, res, next) => {
   try {
     const { reviewId } = req.params;
-    const { category, isFunctionalityChange } = req.body;
+    const { categories, isFunctionalityChange } = req.body;
     const updatedReview = await CodeReview.findByIdAndUpdate(
       reviewId,
-      { category, isFunctionalityChange},
+      { categories, isFunctionalityChange},
       { new: true }
     );
     if (updatedReview) {
@@ -110,7 +110,7 @@ exports.updateReview = async (req, res, next) => {
         success: true,
         review: {
           id: updatedReview._id,
-          category: updatedReview.category,
+          categories: updatedReview.categories,
           isFunctionalityChange: updatedReview.isFunctionalityChange,
         },
         message: 'Review updated successfully',
