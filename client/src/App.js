@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import CodeChangeTaxonomyBuddy from './CodeChangeTaxonomyBuddy';
+import CodeChangeViewer from './CodeChangeViewer';
 import axios from 'axios';
 
-axios.defaults.baseURL =`${process.env.REACT_APP_SERVER_BASE_URL}/api`;
+axios.defaults.baseURL = `${process.env.REACT_APP_SERVER_BASE_URL}/api`;
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -11,7 +13,6 @@ const App = () => {
   const [userId, setUserId] = useState('');
 
   useEffect(() => {
-    // Check localStorage for saved login info when the app loads
     const savedUsername = localStorage.getItem('username');
     const savedUserId = localStorage.getItem('userId');
     if (savedUsername && savedUserId) {
@@ -25,7 +26,6 @@ const App = () => {
     setIsLoggedIn(true);
     setUsername(loggedInUsername);
     setUserId(loggedInUserId);
-    // Save login info to localStorage
     localStorage.setItem('username', loggedInUsername);
     localStorage.setItem('userId', loggedInUserId);
   };
@@ -34,19 +34,33 @@ const App = () => {
     setIsLoggedIn(false);
     setUsername('');
     setUserId('');
-    // Clear login info from localStorage
     localStorage.removeItem('username');
     localStorage.removeItem('userId');
   };
 
   return (
-    <>
-      {!isLoggedIn ? (
-        <LoginPage onLogin={handleLogin} />
-      ) : (
-        <CodeChangeTaxonomyBuddy username={username} userId={userId} onLogout={handleLogout} />
-      )}
-    </>
+    <Router>
+      <Routes>
+        <Route 
+          path="/viewer" 
+          element={<CodeChangeViewer />} 
+        />
+        <Route
+          path="/"
+          element={
+            !isLoggedIn ? (
+              <LoginPage onLogin={handleLogin} />
+            ) : (
+              <CodeChangeTaxonomyBuddy 
+                username={username} 
+                userId={userId} 
+                onLogout={handleLogout} 
+              />
+            )
+          }
+        />
+      </Routes>
+    </Router>
   );
 };
 
