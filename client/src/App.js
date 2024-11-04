@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import CodeChangeTaxonomyBuddy from './CodeChangeTaxonomyBuddy';
 import CodeChangeViewer from './CodeChangeViewer';
+import Validator from './Validator';
 import axios from 'axios';
 
 axios.defaults.baseURL = `${process.env.REACT_APP_SERVER_BASE_URL}/api`;
@@ -46,7 +47,7 @@ const App = () => {
           element={<CodeChangeViewer />} 
         />
         <Route
-          path="/"
+          path="*"
           element={
             !isLoggedIn ? (
               <LoginPage onLogin={handleLogin} />
@@ -55,6 +56,18 @@ const App = () => {
                 username={username} 
                 userId={userId} 
                 onLogout={handleLogout} 
+              />
+            )
+          }
+        />
+        <Route
+          path="/validate"
+          element={
+            !isLoggedIn ? (
+              <LoginPage onLogin={handleLogin} />
+            ) : (
+              <Validator 
+                userId={userId}
               />
             )
           }
