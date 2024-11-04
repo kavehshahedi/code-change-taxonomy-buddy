@@ -27,6 +27,25 @@ exports.getNextCodePair = async (req, res, next) => {
 exports.submitReview = async (req, res, next) => {
   try {
     const { userId, codePairId, categories, isFunctionalityChange} = req.body;
+
+    const existingReview = await CodeReview.findOne({ userId, codePairId });
+    if (existingReview) {
+      const updatedReview = await CodeReview.findByIdAndUpdate(
+        existingReview._id,
+        { categories, isFunctionalityChange },
+        { new: true }
+      );
+      return res.json({
+        success: true,
+        message: 'Review updated successfully',
+        review: {
+          id: updatedReview._id,
+          categories: updatedReview.categories,
+          isFunctionalityChange: updatedReview.isFunctionalityChange,
+        },
+      });
+    }
+
     const newReview = new CodeReview({ userId, codePairId, categories, isFunctionalityChange});
     await newReview.save();
     res.json({ success: true, message: 'Review submitted successfully' });
@@ -71,8 +90,14 @@ exports.getUserReviews = async (req, res, next) => {
 
 exports.getReview = async (req, res, next) => {
   try {
-    const { userId, reviewId } = req.params;
-    const review = await CodeReview.findOne({ _id: reviewId, userId }).populate('codePairId');
+    const { userId, targetId } = req.params;
+    const { type = 'reviewId' } = req.query;
+
+    const query = type === 'codePairId' 
+      ? { codePairId: targetId, userId } 
+      : { _id: targetId, userId };
+
+    const review = await CodeReview.findOne(query).populate('codePairId');
     if (review) {
       res.json({
         success: true,

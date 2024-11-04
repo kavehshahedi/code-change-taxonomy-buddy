@@ -14,7 +14,7 @@ router.get('/next-code-pair/:userId', getNextCodePair);
 router.post('/submit', submitReview);
 router.get('/progress/:userId', getProgress);
 router.get('/user/:userId', getUserReviews);
-router.get('/review/:userId/:reviewId', getReview);
+router.get('/review/:userId/:targetId', getReview);
 router.put('/:reviewId', updateReview);
 router.get('/next-or-latest/:userId', getNextOrLatestReview);
 
